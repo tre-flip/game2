@@ -32,9 +32,13 @@
 	     *canvas-width*
 	     *canvas-height*
 	     :fill-paint *dark*)
-  (draw-rect (vec2 50 50)
+  (draw-rect (vec2 150 150)
 	     *canvas-width*
 	     *canvas-height*
-	     :fill-paint *normal*))
+	     :fill-paint *normal*)
+  (draw-rect (vec2 200 200)
+	     *canvas-width*
+	     *canvas-height*
+	     :fill-paint *light*))
 
 
