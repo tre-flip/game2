@@ -35,4 +35,4 @@
   )
 
 (defmethod draw ((app *game*))
-  )
+  (display-palette))
