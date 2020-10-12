@@ -8,4 +8,6 @@
   :serial t
   :depends-on ("trivial-gamekit" "anaphora")
   :components ((:file "package")
+	       (:file "utils")
+	       (:file "classes")
                (:file "game2")))

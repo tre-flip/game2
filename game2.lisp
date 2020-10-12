@@ -26,7 +26,8 @@
   ;; (draw-rect *origin*  *canvas-width* *canvas-height* :fill-paint color)
   (draw-rect *origin*  *canvas-width* *canvas-height* :fill-paint color))
 
-(defmethod draw ((app *game*))
+(defun display-palette ()
+  "Test color palette."
   (fill-background *very-dark*)
   (draw-rect (vec2 100 100)
 	     *canvas-width*
@@ -41,4 +42,11 @@
 	     *canvas-height*
 	     :fill-paint *light*))
 
+(defmethod post-initialize ((ap *game*))
+  )
 
+(defmethod act ((app *game*))
+  )
+
+(defmethod draw ((app *game*))
+  )
