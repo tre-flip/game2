@@ -1,5 +1,7 @@
 ;;;; game2.lisp
 
+;;  GAME LOOP
+
 (in-package #:game2)
 
 ;; canvas dimentions
@@ -25,22 +27,6 @@
 (defun fill-background (color)
   ;; (draw-rect *origin*  *canvas-width* *canvas-height* :fill-paint color)
   (draw-rect *origin*  *canvas-width* *canvas-height* :fill-paint color))
-
-(defun display-palette ()
-  "Test color palette."
-  (fill-background *very-dark*)
-  (draw-rect (vec2 100 100)
-	     *canvas-width*
-	     *canvas-height*
-	     :fill-paint *dark*)
-  (draw-rect (vec2 150 150)
-	     *canvas-width*
-	     *canvas-height*
-	     :fill-paint *normal*)
-  (draw-rect (vec2 200 200)
-	     *canvas-width*
-	     *canvas-height*
-	     :fill-paint *light*))
 
 (defmethod post-initialize ((ap *game*))
   )
