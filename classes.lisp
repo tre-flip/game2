@@ -31,5 +31,3 @@
 		     :accessor collision-radius
 		     :documentation "Used for collision detection."))
   (:documentation "Used to detect 2D collision. Assumes, this object has X and Y coordinates!"))
-
-(defmethod collide-p ((a collidable2) (b collidable2)))
