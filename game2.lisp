@@ -36,13 +36,20 @@
   "An object pool")
 
 (defmethod post-initialize ((ap *game*))
-  (bind-up    (lambda () (move *player* (vec2 0 1))))
-  (bind-left  (lambda () (move *player* (vec2 -1 0))))
-  (bind-down  (lambda () (move *player* (vec2 0 -1))))
-  (bind-right (lambda () (move *player* (vec2 1 0)))))
+  (bind-up    :pressed (lambda () (increase (heading-to *player*) (vec2 0 1))))
+  (bind-left  :pressed (lambda () (increase (heading-to *player*) (vec2 -1 0))))
+  (bind-down  :pressed (lambda () (increase (heading-to *player*) (vec2 0 -1))))
+  (bind-right :pressed (lambda () (increase (heading-to *player*) (vec2 1 0))))
+
+  (bind-up    :released (lambda () (increase (heading-to *player*) (vec2 0 -1))))
+  (bind-left  :released (lambda () (increase (heading-to *player*) (vec2 1 0))))
+  (bind-down  :released (lambda () (increase (heading-to *player*) (vec2 0 1))))
+  (bind-right :released (lambda () (increase (heading-to *player*) (vec2 -1 0))))  
+  )
 
 (defmethod act ((app *game*))
-  )
+  (loop for obj in *objects*
+	do (update obj)))
 
 (defmethod draw ((app *game*))
   (fill-background *color1*)

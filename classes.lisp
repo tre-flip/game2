@@ -55,22 +55,48 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defgeneric display (object)
-  (:documentation "A method used to display according to it's state"))
+  (:documentation "A method used to display according to its state."))
 
-(defgeneric move! (object delta)
-  (:documentation "Move object by adding delta to its coordinates."))
+(defgeneric move (object delta)
+  (:documentation "Movee an object by adding delta to its coordinates."))
 
+(defgeneric update (object)
+  (:documentation "Update an object according to its state."))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;
+;; INERTIA INTERFACE ;;
+;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass inertial ()
+  ((inertia-koef :initform 1)
+   (inertia :initform (vec2 0 0)
+	    :accessor inertia)))
+
+(defmethod move :after ((object inertial) (delta vec2))
+  (with-slots (inertia inertia-koef coords) object
+    (when (and (> (x inertia) 0)
+	       (> (y inertia) 0)) 
+      (progn
+	(setf inertia (add inertia delta))
+	(setf coords
+		   (add coords (mult inertia inertia-koef)))
+	     (decf inertia-koef 1)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; PLAYER IMPLEMENTATION ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defclass player (collidable2-circle)
+(defclass player (collidable2-circle inertial)
   ((coords :initform (vec2 100 100)
 	   :accessor coords)
    (collision-radius :initform 4)
+   (inertia-koef :initform 50)
+   (heading-to :initform (vec2 0 0)
+	       :accessor heading-to
+	       :documentation "A vector that represents applied speed.")
    (speed-pixels :initform 3
-	  :accessor speed-pixels))
+		 :accessor speed-pixels))
   (:documentation "Represents player. Inherits X, Y from VEC2, collidable."))
 
 (defmethod display ((player player))
@@ -81,3 +107,7 @@
 (defmethod move ((player player) (delta vec2))
   (with-slots (coords speed-pixels) player
     (setf coords (add coords (mult delta speed-pixels)))))
+
+(defmethod update ((player player))
+  (move player
+	(heading-to player)))
