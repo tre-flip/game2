@@ -9,7 +9,7 @@
 
 (defun display-palette ()
   "Test color palette."
-  (fill-background *very-dark*)
+  (fill-background *v-dark*)
   (draw-rect (vec2 100 100)
 	     *canvas-width*
 	     *canvas-height*
@@ -21,4 +21,8 @@
   (draw-rect (vec2 200 200)
 	     *canvas-width*
 	     *canvas-height*
-	     :fill-paint *light*))
+	     :fill-paint *light*)
+  (draw-rect (vec2 300 300)
+	     *canvas-width*
+	     *canvas-height*
+	     :fill-paint *v-light*))
