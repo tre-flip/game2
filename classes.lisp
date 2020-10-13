@@ -2,15 +2,21 @@
 
 (in-package #:game2)
 
-(defgeneric collide-p (a b)
-  (:documentation "Checks if A and B collide")) 
+;;;;;;;;;;;;;;;;;;;;;;;;;
+;; COLLISION INTERFACE ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defclass collidable ()
-  ((collision-radius :initform 5
+(defgeneric collide-p (a b)
+  (:documentation "Checks if A and B collide.")) 
+
+(defmethod collide-p ((a standard-object) (b standard-object))
+  nil)
+
+(defclass collidable2 ()
+  ((collision-radius :initform 0 ;; 0 pixels
 		     :initarg :collision-radius
 		     :accessor collision-radius
 		     :documentation "Used for collision detection."))
-  (:documentation "Collidable objects can collide with each other. Assumes, this object has X and Y coordinates!"))
+  (:documentation "Used to detect 2D collision. Assumes, this object has X and Y coordinates!"))
 
-(defmethod collide-p ((a collidable) (b collidable))
-  )
+(defmethod collide-p ((a collidable2) (b collidable2)))
