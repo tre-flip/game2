@@ -2,32 +2,60 @@
 
 (in-package #:game2)
 
+;; https://learnopengl.com/In-Practice/2D-Game/Collisions/Collision-detection
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; COLLISION INTERFACE ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; https://learnopengl.com/In-Practice/2D-Game/Collisions/Collision-detection
-
 (defgeneric collide-p (a b)
-  (:documentation "Checks if A and B collide.")) 
+  (:documentation "Checks if A and B collide."))
 
-(defmethod collide-p ((a standard-object) (b standard-object))
-  nil)
+(defgeneric collide (a b)
+  (:documentation "Performs actions when objects collide"))
 
+
+;;;;;;;;;;;;;;;;;;;
+;; BOX COLLISION ;;
+;;;;;;;;;;;;;;;;;;;
+
+;; TODO
 (defclass collidable2-box ()
-  ((collision-y :initform 0 ;; 0 pixels
-		:initarg :collision-y
-		:accessor collision-y
-		:documentation "Used for collision detection.")
-   (collision-x :initform 0 ;; 0 pixels
-		:initarg :collision-x
-		:accessor collision-x
-		:documentation "Used for collision detection."))
-  (:documentation "Used to detect 2D collision. Assumes, this object has X and Y coordinates!"))
+  ((height :initform 0 ;; 0 pixels
+	   :initarg :collision-y
+	   :accessor collision-y
+	   :documentation "Used for collision detection.")
+   (widht :initform 0 ;; 0 pixels
+	  :initarg :collision-x
+	  :accessor collision-x
+	  :documentation "Used for collision detection."))
+  (:documentation "Used to detect 2D collision. Assumes, that method DISTANCE is definde for this objcect"))
+
+
+;;;;;;;;;;;;;;;;;;;;;;
+;; CIRCLE COLLISION ;;
+;;;;;;;;;;;;;;;;;;;;;;
 
 (defclass collidable2-circle ()
   ((collision-radius :initform 0 ;; 0 pixels
 		     :initarg :collision-radius
 		     :accessor collision-radius
 		     :documentation "Used for collision detection."))
-  (:documentation "Used to detect 2D collision. Assumes, this object has X and Y coordinates!"))
+  (:documentation "Used to detect 2D collision. Assumes, that method DISTANCE is definde for this objcect"))
+
+;; collision for circle with circle
+(defmethod collide-p ((a collidable2-circle) (b collidable2-circle))
+  (< (+ (collision-radius a)
+	(collision-radius b))
+     (distance a b)))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; IN-GAME OBJECT INTERFACE ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defgeneric display (object)
+  (:documentation "A method used to display according to it's state"))
+
+(defgeneric move (object delta)
+  (:documentation "Move object by adding delta to its coordinates."))

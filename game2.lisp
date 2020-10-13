@@ -11,11 +11,12 @@
 (defvar *origin* (gamekit:vec2 0 0))
 
 ;; color palette
-(defparameter *v-dark* (vec4 0.02 0.28 0.30 1))
-(defparameter *dark*      (vec4 0 0.68 0.69 1))
-(defparameter *normal*    (vec4 0.44 0.120 0.115 1))
-(defparameter *light*     (vec4 0.55 0.2 0.3 1))
-(defparameter *v-light*     (vec4 0.55 0.1 0.3 1))
+;; from neutral to most noticable
+(defparameter *color1* (vec4 0.02 0.28 0.30 1))
+(defparameter *color2*      (vec4 0 0.68 0.69 1))
+(defparameter *color3*    (vec4 0.44 0.120 0.115 1))
+(defparameter *color4*     (vec4 0.55 0.2 0.3 1))
+(defparameter *color5*     (vec4 0.55 0.1 0.3 1))
 
 (defgame *game* () ()
   (:viewport-width *canvas-width*)	    ; window's width
@@ -29,6 +30,9 @@
   ;; (draw-rect *origin*  *canvas-width* *canvas-height* :fill-paint color)
   (draw-rect *origin*  *canvas-width* *canvas-height* :fill-paint color))
 
+(defparameter *objects* nil
+  "An object pool")
+
 (defmethod post-initialize ((ap *game*))
   )
 
@@ -36,4 +40,7 @@
   )
 
 (defmethod draw ((app *game*))
-  (display-palette))
+  (fill-background *color1*)
+  ;; display each object
+  (loop for obj in *objects*
+	do (display obj)))
