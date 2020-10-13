@@ -57,5 +57,27 @@
 (defgeneric display (object)
   (:documentation "A method used to display according to it's state"))
 
-(defgeneric move (object delta)
+(defgeneric move! (object delta)
   (:documentation "Move object by adding delta to its coordinates."))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; PLAYER IMPLEMENTATION ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass player (collidable2-circle)
+  ((coords :initform (vec2 100 100)
+	   :accessor coords)
+   (collision-radius :initform 4)
+   (speed-pixels :initform 3
+	  :accessor speed-pixels))
+  (:documentation "Represents player. Inherits X, Y from VEC2, collidable."))
+
+(defmethod display ((player player))
+  (draw-circle (coords player) 
+	       (collision-radius player)
+	       :fill-paint *color2*))
+
+(defmethod move ((player player) (delta vec2))
+  (with-slots (coords speed-pixels) player
+    (setf coords (add coords (mult delta speed-pixels)))))

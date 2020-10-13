@@ -9,5 +9,6 @@
   :depends-on ("trivial-gamekit" "anaphora")
   :components ((:file "package")
 	       (:file "utils")
+	       (:file "input")
 	       (:file "classes")
                (:file "game2")))
