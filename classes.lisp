@@ -69,19 +69,25 @@
 ;;;;;;;;;;;;;;;;;;;;;;;
 
 (defclass inertial ()
-  ((inertia-koef :initform 1)
+  ((inertia-timer :initform 10)
    (inertia :initform (vec2 0 0)
 	    :accessor inertia)))
 
-(defmethod move :after ((object inertial) (delta vec2))
+(defmethod update :after ((object inertial))
   (with-slots (inertia inertia-koef coords) object
     (when (and (> (x inertia) 0)
 	       (> (y inertia) 0)) 
       (progn
-	(setf inertia (add inertia delta))
+	;; move it
 	(setf coords
-		   (add coords (mult inertia inertia-koef)))
-	     (decf inertia-koef 1)))))
+	      (add coords (mult inertia inertia-koef)))
+	;; decrease inertia
+	(decf inertia-koef 0.1)))))
+
+(defmethod move :after ((object inertial) (delta vec2))
+  (with-slots (inertia inertia-koef inertia-koef-default) object
+    (setf inertia (add inertia delta))
+    (setf inertia-koef inertia-koef-default)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; PLAYER IMPLEMENTATION ;;
@@ -91,7 +97,8 @@
   ((coords :initform (vec2 100 100)
 	   :accessor coords)
    (collision-radius :initform 4)
-   (inertia-koef :initform 50)
+   (inertia-koef-default :initform 10)
+   (inertia-koef :initform 10)
    (heading-to :initform (vec2 0 0)
 	       :accessor heading-to
 	       :documentation "A vector that represents applied speed.")
