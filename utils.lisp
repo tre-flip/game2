@@ -1,5 +1,18 @@
 (in-package #:game2)
 
+;;;;;;;;;;;;;;;;;;;;;;;;
+;; CONVINIENCE MACROS ;;
+;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defmacro increase (field value)
+  `(setf ,field
+	 (add ,field ,value)))
+
+(defmacro decrease (field value)
+  `(setf ,field
+	 (subt ,field ,value)))
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; 2D DISTANCE INTERFACE ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -10,6 +23,16 @@
 (defmethod distance ((a vec2) (b vec2))
   (sqrt (+ (expt (- (x a) (x b)) 2)
 	   (expt (- (y a) (y b)) 2))))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;
+;; INVERSE INTERFACE ;;
+;;;;;;;;;;;;;;;;;;;;;;;
+
+(defgeneric inverse (obj))
+
+(defmethod inverse ((vec vec2))
+  (vec2 (y vec) (x vec)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

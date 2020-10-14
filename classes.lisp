@@ -69,25 +69,23 @@
 ;;;;;;;;;;;;;;;;;;;;;;;
 
 (defclass inertial ()
-  ((inertia-timer :initform 10)
+  ((deceleration :initform 0.05)
+   (stop-limit :initform 0.1)
    (inertia :initform (vec2 0 0)
 	    :accessor inertia)))
 
 (defmethod update :after ((object inertial))
-  (with-slots (inertia inertia-koef coords) object
-    (when (and (> (x inertia) 0)
-	       (> (y inertia) 0)) 
+  (with-slots (inertia deceleration stop-limit coords) object
+    (if (and (> (abs (x inertia)) stop-limit)
+	     (> (abs (y inertia)) stop-limit))
       (progn
-	;; move it
-	(setf coords
-	      (add coords (mult inertia inertia-koef)))
-	;; decrease inertia
-	(decf inertia-koef 0.1)))))
+	(setf coords (add coords inertia))
+	(setf inertia (mult (inverse inertia) deceleration)))
+      (setf inertia (vec2 0 0)))))
 
 (defmethod move :after ((object inertial) (delta vec2))
   (with-slots (inertia inertia-koef inertia-koef-default) object
-    (setf inertia (add inertia delta))
-    (setf inertia-koef inertia-koef-default)))
+    (setf inertia (add inertia delta))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; PLAYER IMPLEMENTATION ;;
