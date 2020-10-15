@@ -5,10 +5,12 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defmacro increase (field value)
+  "operates on vectors"
   `(setf ,field
 	 (add ,field ,value)))
 
 (defmacro decrease (field value)
+  "operates on vectors"  
   `(setf ,field
 	 (subt ,field ,value)))
 
@@ -32,7 +34,8 @@
 (defgeneric inverse (obj))
 
 (defmethod inverse ((vec vec2))
-  (vec2 (y vec) (x vec)))
+  (vec2 (- (x vec))
+	(- (y vec))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

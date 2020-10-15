@@ -58,7 +58,7 @@
   (:documentation "A method used to display according to its state."))
 
 (defgeneric move (object delta)
-  (:documentation "Movee an object by adding delta to its coordinates."))
+  (:documentation "Move an object by adding delta to its coordinates."))
 
 (defgeneric update (object)
   (:documentation "Update an object according to its state."))
@@ -69,7 +69,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;
 
 (defclass inertial ()
-  ((deceleration :initform 0.05)
+  ((deceleration :initform 0.1)
    (stop-limit :initform 0.1)
    (inertia :initform (vec2 0 0)
 	    :accessor inertia)))
@@ -80,12 +80,13 @@
 	     (> (abs (y inertia)) stop-limit))
       (progn
 	(setf coords (add coords inertia))
-	(setf inertia (mult (inverse inertia) deceleration)))
+	(setf inertia (add inertia
+			   (mult (inverse inertia) deceleration))))
       (setf inertia (vec2 0 0)))))
 
 (defmethod move :after ((object inertial) (delta vec2))
   (with-slots (inertia inertia-koef inertia-koef-default) object
-    (setf inertia (add inertia delta))))
+    (setf inertia (normalize delta))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; PLAYER IMPLEMENTATION ;;
@@ -95,8 +96,6 @@
   ((coords :initform (vec2 100 100)
 	   :accessor coords)
    (collision-radius :initform 4)
-   (inertia-koef-default :initform 10)
-   (inertia-koef :initform 10)
    (heading-to :initform (vec2 0 0)
 	       :accessor heading-to
 	       :documentation "A vector that represents applied speed.")
@@ -111,7 +110,12 @@
 
 (defmethod move ((player player) (delta vec2))
   (with-slots (coords speed-pixels) player
-    (setf coords (add coords (mult delta speed-pixels)))))
+    (let ((c coords)))
+    (setf coords (add coords (mult (normalize delta)
+				   speed-pixels)))
+    (when (or (not (equal (y coords) (y c)))
+	      (not (equal (x coords) (x c))))
+      (print coords))))
 
 (defmethod update ((player player))
   (move player
