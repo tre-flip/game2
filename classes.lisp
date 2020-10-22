@@ -4,6 +4,48 @@
 
 ;; https://learnopengl.com/In-Practice/2D-Game/Collisions/Collision-detection
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; IN-GAME OBJECT INTERFACE ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defgeneric display (object)
+  (:documentation "A method used to display according to its state."))
+
+(defgeneric update (object)
+  (:documentation "Update an object according to its state."))
+
+;;;;;;;;;;;;;;;;;;;;;;;
+;; PHYSICS INTERFACE ;;
+;;;;;;;;;;;;;;;;;;;;;;;
+
+(defgeneric move (object)
+  (:documentation "Move a object according to its state."))
+
+(defgeneric move-to (obj destination)
+  (:documentation "Moves an object to destination"))
+
+(defgeneric move-by (obj delta)
+  (:documentation "Moves an object by delta"))
+
+;; default implementation
+(defclass movable ()
+  ((coords :initform (vec2 0 0))
+   (speed :initform 0
+	  :documentation "In pixels/frame.")
+   (heading :initform (vec2 0 0))))
+
+(defmethod move ((obj movable))
+  (with-slots (coords speed heading) obj
+    (setf coords (add coords
+		      (mult (normalize heading)
+			    speed)))))
+
+(defmethod move-to ((obj movable) (delta vec2))
+  )
+
+(defmethod move-by ((obj movable) (delta vec2))
+  )
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; COLLISION INTERFACE ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -50,57 +92,15 @@
      (distance a b)))
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; IN-GAME OBJECT INTERFACE ;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defgeneric display (object)
-  (:documentation "A method used to display according to its state."))
-
-(defgeneric move (object delta)
-  (:documentation "Move an object by adding delta to its coordinates."))
-
-(defgeneric update (object)
-  (:documentation "Update an object according to its state."))
-
-
-;;;;;;;;;;;;;;;;;;;;;;;
-;; INERTIA INTERFACE ;;
-;;;;;;;;;;;;;;;;;;;;;;;
-
-(defclass inertial ()
-  ((deceleration :initform 0.1)
-   (stop-limit :initform 0.1)
-   (inertia :initform (vec2 0 0)
-	    :accessor inertia)))
-
-(defmethod update :after ((object inertial))
-  (with-slots (inertia deceleration stop-limit coords) object
-    (if (and (> (abs (x inertia)) stop-limit)
-	     (> (abs (y inertia)) stop-limit))
-      (progn
-	(setf coords (add coords inertia))
-	(setf inertia (add inertia
-			   (mult (inverse inertia) deceleration))))
-      (setf inertia (vec2 0 0)))))
-
-(defmethod move :after ((object inertial) (delta vec2))
-  (with-slots (inertia inertia-koef inertia-koef-default) object
-    (setf inertia (normalize delta))))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; PLAYER IMPLEMENTATION ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defclass player (collidable2-circle inertial)
-  ((coords :initform (vec2 100 100)
-	   :accessor coords)
+(defclass player (movable collidable2-circle)
+  ((coords :initform (vec2 100 100))
    (collision-radius :initform 4)
-   (heading-to :initform (vec2 0 0)
-	       :accessor heading-to
-	       :documentation "A vector that represents applied speed.")
-   (speed-pixels :initform 3
-		 :accessor speed-pixels))
+   (heading :initform (vec2 0 0))
+   (speed :initform 3))
   (:documentation "Represents player. Inherits X, Y from VEC2, collidable."))
 
 (defmethod display ((player player))
@@ -108,15 +108,16 @@
 	       (collision-radius player)
 	       :fill-paint *color2*))
 
-(defmethod move ((player player) (delta vec2))
-  (with-slots (coords speed-pixels) player
-    (let ((c coords)))
-    (setf coords (add coords (mult (normalize delta)
-				   speed-pixels)))
-    (when (or (not (equal (y coords) (y c)))
-	      (not (equal (x coords) (x c))))
-      (print coords))))
-
 (defmethod update ((player player))
-  (move player
-	(heading-to player)))
+  (move player))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;
+;; BOTS IMPLEMENTATION ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass bot (movable collidable2-circle)
+  ((coords :initform (vec2 *canvas-width*
+			   (random *canvas-width*)))
+   (heading :initform (vec2 -1 0))
+   (speed :initform (+ 1 (random 2)))
+   (collision-radius :initform 5)))
