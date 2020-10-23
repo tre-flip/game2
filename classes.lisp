@@ -32,7 +32,8 @@
   ((coords :initform (vec2 0 0))
    (speed :initform 0
 	  :documentation "In pixels/frame.")
-   (heading :initform (vec2 0 0))))
+   (heading :initform (vec2 0 0)
+	    :accessor heading)))
 
 (defmethod move ((obj movable))
   (with-slots (coords speed heading) obj
@@ -97,19 +98,23 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defclass player (movable collidable2-circle)
-  ((coords :initform (vec2 100 100))
+  ((coords :initform (vec2 100 100)
+	   :accessor coords)
    (collision-radius :initform 4)
    (heading :initform (vec2 0 0))
-   (speed :initform 3))
+   (speed :initform 6))
   (:documentation "Represents player. Inherits X, Y from VEC2, collidable."))
 
 (defmethod display ((player player))
-  (draw-circle (coords player) 
-	       (collision-radius player)
-	       :fill-paint *color2*))
+  (draw-text "'()" (coords player)
+	     :fill-color *color2*))
 
 (defmethod update ((player player))
   (move player))
+
+(defmethod move-to ((player player) (where vec2))
+  (setf (coords player)
+	where))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; BOTS IMPLEMENTATION ;;

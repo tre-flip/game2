@@ -4,6 +4,9 @@
 
 (in-package #:game2)
 
+;; resources
+(register-resource-package :game (asdf:system-relative-pathname :game2 "assets/"))
+(define-font fixed-sys "assets/fixed-sys")
 ;; canvas dimentions
 (defvar *canvas-width* 800)
 (defvar *canvas-height* 600)
@@ -19,6 +22,9 @@
 (defparameter *color5* (vec4 0.55 0.1 0.3 1))
 
 (defgame *game* () ()
+  (:draw-rate 60)
+  (:act-rate 30)
+  (:prepare-resources t)
   (:viewport-width *canvas-width*)	    ; window's width
   (:viewport-height *canvas-height*)	    ; window's height
   (:viewport-title "treflip's tomfoolery"))  ; window's title
@@ -32,19 +38,22 @@
 
 (defparameter *player* (make-instance 'player))
 
+(defparameter *bot-spawn-cooldown* (make-instance 'counter :initial 100
+						  :delta 1))
+
 (defparameter *objects* (list *player*)
   "An object pool")
 
 (defmethod post-initialize ((ap *game*))
-  (bind-up    :pressed (lambda () (increase (heading-to *player*) (vec2 0 1))))
-  (bind-left  :pressed (lambda () (increase (heading-to *player*) (vec2 -1 0))))
-  (bind-down  :pressed (lambda () (increase (heading-to *player*) (vec2 0 -1))))
-  (bind-right :pressed (lambda () (increase (heading-to *player*) (vec2 1 0))))
+  (bind-up    :pressed (lambda () (increase (heading *player*) (vec2 0 1))))
+  (bind-left  :pressed (lambda () (increase (heading *player*) (vec2 -1 0))))
+  (bind-down  :pressed (lambda () (increase (heading *player*) (vec2 0 -1))))
+  (bind-right :pressed (lambda () (increase (heading *player*) (vec2 1 0))))
 
-  (bind-up    :released (lambda () (increase (heading-to *player*) (vec2 0 -1))))
-  (bind-left  :released (lambda () (increase (heading-to *player*) (vec2 1 0))))
-  (bind-down  :released (lambda () (increase (heading-to *player*) (vec2 0 1))))
-  (bind-right :released (lambda () (increase (heading-to *player*) (vec2 -1 0))))  
+  (bind-up    :released (lambda () (increase (heading *player*) (vec2 0 -1))))
+  (bind-left  :released (lambda () (increase (heading *player*) (vec2 1 0))))
+  (bind-down  :released (lambda () (increase (heading *player*) (vec2 0 1))))
+  (bind-right :released (lambda () (increase (heading *player*) (vec2 -1 0))))  
   )
 
 (defmethod act ((app *game*))
