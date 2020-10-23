@@ -23,7 +23,7 @@
 
 (defgame *game* () ()
   (:draw-rate 60)
-  (:act-rate 30)
+  (:act-rate 60)
   (:prepare-resources t)
   (:viewport-width *canvas-width*)	    ; window's width
   (:viewport-height *canvas-height*)	    ; window's height
@@ -38,9 +38,11 @@
 
 (defparameter *player* (make-instance 'player))
 
-(defparameter *bot-spawn-cooldown* (make-instance 'counter :initial 100
-						  :delta 1))
-
+(defparameter *bot-spawner* (make-instance 'bot-spawner
+					   :x-start *canvas-width*
+					   :x-end *canvas-width*
+					   :y-start 0
+					   :y-end *canvas-height*))
 (defparameter *objects* (list *player*)
   "An object pool")
 
@@ -57,7 +59,12 @@
   )
 
 (defmethod act ((app *game*))
+  (awhen (progn (print "SPAWNING BOT...") (maybe-spawn-bot *bot-spawner*)) 
+    (print "BOT SPAWNED!")
+    (push it *objects*))
   (loop for obj in *objects*
+	when (dead-p obj)
+	  do (setf *objects* (delete obj *objects*)) 
 	do (update obj)))
 
 (defmethod draw ((app *game*))

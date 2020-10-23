@@ -75,10 +75,11 @@
 
 (defclass counter ()
   ((initial :initarg :initial
+	    :accessor initial
 	    :initform 0)
    (delta :initform 1
-	  :initarg delta)
-   (remains)))
+	  :initarg :delta)
+   (remains :accessor remains)))
 
 (defmethod initialize-instance :after ((counter counter) &rest initargs)
   (declare (ignore initargs))
@@ -91,10 +92,10 @@
 
 (defmethod counter-elapsed-p ((counter counter))
   (with-slots (remains) counter
-    (> remains 0)))
+    (<= remains 0)))
 
 (defmethod counter-reset ((counter counter) &optional init)
   (with-slots (remains initial) counter
       (if init
-	  (setf (remains counter) init)
+	  (setf (remains counter) init) 
 	  (setf (remains counter) (initial counter)))))

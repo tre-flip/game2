@@ -4,6 +4,22 @@
 
 ;; https://learnopengl.com/In-Practice/2D-Game/Collisions/Collision-detection
 
+;;;;;;;;;;;;;;;;;;;;;;;;
+;; KILLABLE INTERFACE ;;
+;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defgeneric dead-p (obj))
+
+(defclass killable ()
+  ((dead :initform nil)))
+
+(defmethod dead-p ((obj killable))
+  (with-slots (dead) obj
+    (when dead t)))
+
+(defmethod dead-p (obj)
+  nil)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; IN-GAME OBJECT INTERFACE ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -29,7 +45,8 @@
 
 ;; default implementation
 (defclass movable ()
-  ((coords :initform (vec2 0 0))
+  ((coords :initform (vec2 0 0)
+	   :accessor coords)
    (speed :initform 0
 	  :documentation "In pixels/frame.")
    (heading :initform (vec2 0 0)
@@ -120,9 +137,51 @@
 ;; BOTS IMPLEMENTATION ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defclass bot (movable collidable2-circle)
+(defclass bot (movable collidable2-circle killable)
   ((coords :initform (vec2 *canvas-width*
-			   (random *canvas-width*)))
-   (heading :initform (vec2 -1 0))
+			   (random *canvas-width*))
+	   :initarg :coords)
+   (heading :initform (vec2 -1 0)
+	    :initarg :heading)
    (speed :initform (+ 1 (random 2)))
-   (collision-radius :initform 5)))
+   (collision-radius :initform 5)
+   (hp :initform (+ 1 (random 2)))))
+
+
+(defmethod update ((bot bot))
+  (with-slots (coords heading hp dead) bot
+    (when (< hp 0)
+      (setf dead t))
+    (unless dead
+      (move bot))
+    (when (< (x coords) 0)
+      (setf dead t))))
+
+(defmethod display ((bot bot))
+  (draw-text "@"
+	     (coords bot)
+	     :fill-color *color3*))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; BOT SPAWNER IMPLEMENTATION ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; refactor to generic spawner
+(defclass bot-spawner (counter)
+  ((cooldown :initform (make-instance 'counter :initial 100
+					       :delta 1))
+   (remains :initform 5)
+   (x-start :initarg :x-start)
+   (x-end :initarg :x-end)
+   (y-start :initarg :y-start)
+   (y-end :initarg :y-end)))
+
+(defmethod maybe-spawn-bot ((spawner bot-spawner))
+  (with-slots (x-start x-end y-start y-end cooldown initial delta) spawner
+    (counter-tick spawner)
+    (when (counter-elapsed-p spawner)
+      (progn
+	(counter-reset spawner (- initial delta))
+	(make-instance 'bot
+		     :coords (vec2 (+ x-start (random (+ 1 (- x-end x-start))))
+				   (+ y-start (random (+ 1 (- y-end y-start))))))))))
