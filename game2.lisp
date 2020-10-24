@@ -5,8 +5,10 @@
 (in-package #:game2)
 
 ;; resources
-(register-resource-package :game (asdf:system-relative-pathname :game2 "assets/"))
-(define-font fixed-sys "assets/fixed-sys")
+(register-resource-package :assets (asdf:system-relative-pathname :game2 "assets/"))
+(define-font assets::fixed-sys "fixed-sys")
+(defparameter *font* nil)
+
 ;; canvas dimentions
 (defvar *canvas-width* 800)
 (defvar *canvas-height* 600)
@@ -45,6 +47,7 @@
   "An object pool")
 
 (defmethod post-initialize ((ap *game*))
+  (setf *font* (make-font 'assets::fixed-sys 16))
   (bind-up    :pressed (lambda () (increase (heading *player*) (vec2 0 1))))
   (bind-left  :pressed (lambda () (increase (heading *player*) (vec2 -1 0))))
   (bind-down  :pressed (lambda () (increase (heading *player*) (vec2 0 -1))))
@@ -55,6 +58,13 @@
   (bind-down  :released (lambda () (increase (heading *player*) (vec2 0 1))))
   (bind-right :released (lambda () (increase (heading *player*) (vec2 -1 0))))  
   )
+
+(defun draw-hud (origin)
+  (with-slots (hp score) *player*
+    (draw-text (format nil "HP: ~a SCORE: ~a" hp score)
+	       origin
+	       :fill-color (color :white)
+	       :font *font*)))
 
 (defmethod act ((app *game*))
   (awhen (maybe-spawn *star-spawner*)
@@ -76,11 +86,12 @@
     (t (arg) (print arg))) 
   (loop for obj in *objects*
 	when (dead-p obj)
-	  do (setf *objects* (delete obj *objects*)) 
+	  do (setf *objects* (delete obj *objects*))
 	do (update obj)))
 
 (defmethod draw ((app *game*))
   (fill-background (color :black))
   ;; display each object
   (loop for obj in *objects*
-	do (display obj)))
+	do (display obj))
+  (draw-hud (vec2 10 10)))

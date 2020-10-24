@@ -43,10 +43,12 @@
 ;;;;;;;;;;;;;
 
 (defparameter *palette* (alexandria:plist-hash-table (list :black (vec4 0 0 0 1)
+							   :white (vec4 1 1 1 1)
 							   :grey (vec4 0.75 0.75 0.75 0.75)
-							   :pink (vec4 1 0 1 0.4)
+							   :pink (vec4 1 0 1 1)
 							   :maroon (vec4 0.5 0 0 0.7)
-							   :teal (vec4 0 0.5 0.5 1)))
+							   :red (vec4 1 0 0 1)
+							   :aqua (vec4 0 1 1 1)))
   "color palette")
 
 (defun color (key)
