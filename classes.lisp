@@ -11,7 +11,8 @@
 (defgeneric dead-p (obj))
 
 (defclass killable ()
-  ((dead :initform nil)))
+  ((dead :initform nil
+	 :accessor dead)))
 
 (defmethod dead-p ((obj killable))
   (with-slots (dead) obj
@@ -122,7 +123,9 @@
 	   :accessor coords)
    (collision-radius :initform 4)
    (heading :initform (vec2 0 0))
-   (speed :initform 6))
+   (speed :initform 5)
+   (weapon :initform (make-instance 'player-bullet-spawner)
+	   :accessor weapon))
   (:documentation "Represents player. Inherits X, Y from VEC2, collidable."))
 
 (defmethod display ((player player))
@@ -190,6 +193,31 @@
 	     (coords star)
 	     :fill-color (color :grey)))
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; BULLET IMPLEMENTATION ;; 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass player-bullet (movable killable collidable2-circle)
+  ((coords :initarg :coords
+	   :accessor coords)
+   (heading :initarg :heading
+	    :accessor heading)
+   (collision-radius :initform 5)
+   (speed :initform 6)))
+
+(defmethod display ((bullet player-bullet))
+  (draw-text "->"
+	     (coords bullet)
+	     :fill-color (color :pink)))
+
+(defmethod update ((bullet player-bullet))
+  (with-slots (coords heading dead) bullet
+    (unless dead
+      (move bullet))
+    (when (> (x coords) *canvas-width*)
+      (setf dead t))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;; SPAWNER INTERFACE ;;
 ;;;;;;;;;;;;;;;;;;;;;;;
@@ -241,6 +269,22 @@
 				 (+ y-start (random (+ 1 (- y-end y-start))))))))
 
 
+
+;;;;;;;;;;;;;;;;;;;;
+;; BULLET SPAWNER ;;
+;;;;;;;;;;;;;;;;;;;;
+
+(defclass player-bullet-spawner (spawner)
+  ((initial :initform 50)))
+
+(defmethod maybe-spawn ((spawner player-bullet-spawner))
+    (with-slots (x-start x-end y-start y-end cooldown initial delta) spawner
+      (make-instance 'player-bullet
+		     :heading (vec2 1 0)
+		     :coords (add (coords *player*)
+				  (vec2 6 0)))))
+
+
 ;;;;;;;;;;;;;;;;
 ;; COLLISIONS ;;
 ;;;;;;;;;;;;;;;;
@@ -253,3 +297,18 @@
 
 (defmethod collide ((bot bot) (bot2 bot))
   (print "COLLISION"))
+
+(defmethod collide ((bullet player-bullet) (bot bot))
+  (setf (dead bot) t
+	(dead bullet) t)
+  (print "Bullet collision"))
+
+(defmethod collide ((bot bot) (bullet player-bullet))
+  (collide bullet bot)
+  (print "Bullet collision"))
+
+(defmethod collide ((player player) (bullet player-bullet))
+  )
+
+(defmethod collide ((bullet player-bullet) (player player))
+  )

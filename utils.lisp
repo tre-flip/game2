@@ -46,7 +46,7 @@
 							   :grey (vec4 0.75 0.75 0.75 0.75)
 							   :pink (vec4 1 0 1 0.4)
 							   :maroon (vec4 0.5 0 0 0.7)
-							   :teal (vec4 0 0.5 0.5 0.7)))
+							   :teal (vec4 0 0.5 0.5 1)))
   "color palette")
 
 (defun color (key)

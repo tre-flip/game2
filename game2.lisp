@@ -62,14 +62,17 @@
     (push it *objects*))
   (awhen (maybe-spawn *bot-spawner*)
     ;; make it push to the second layer
-    (push it *objects*))  
+    (push it *objects*))
+  (awhen (maybe-spawn (weapon *player*))
+    ;; make it push to the second layer
+    (push it *objects*))
   (handler-case
       (alexandria:map-combinations (lambda (comb) 
 				     (when (collide-p (car comb) (cadr comb))
-					     (collide (car comb) (cadr comb))))
-				  *objects*
-				  :length 2
-				  :copy nil)
+				       (collide (car comb) (cadr comb))))
+				   *objects*
+				   :length 2
+				   :copy nil)
     (t (arg) (print arg))) 
   (loop for obj in *objects*
 	when (dead-p obj)
