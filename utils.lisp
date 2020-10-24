@@ -38,30 +38,19 @@
 	(- (y vec))))
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; PALETTE FOR TESTING COLORS ;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;
+;; PALETTE ;;
+;;;;;;;;;;;;;
 
-(defun display-palette ()
-  "Test color palette."
-  (fill-background *color1*)
-  (draw-rect (vec2 100 100)
-	     *canvas-width*
-	     *canvas-height*
-	     :fill-paint *color2*)
-  (draw-rect (vec2 150 150)
-	     *canvas-width*
-	     *canvas-height*
-	     :fill-paint *color3*)
-  (draw-rect (vec2 200 200)
-	     *canvas-width*
-	     *canvas-height*
-	     :fill-paint *color4*)
-  (draw-rect (vec2 300 300)
-	     *canvas-width*
-	     *canvas-height*
-	     :fill-paint *color5*))
+(defparameter *palette* (alexandria:plist-hash-table (list :black (vec4 0 0 0 1)
+							   :grey (vec4 0.75 0.75 0.75 0.75)
+							   :pink (vec4 1 0 1 0.4)
+							   :maroon (vec4 0.5 0 0 0.7)
+							   :teal (vec4 0 0.5 0.5 0.7)))
+  "color palette")
 
+(defun color (key)
+  (gethash key *palette*))
 
 ;;;;;;;;;;;;;
 ;; COUNTER ;;
@@ -99,3 +88,4 @@
       (if init
 	  (setf (remains counter) init) 
 	  (setf (remains counter) (initial counter)))))
+

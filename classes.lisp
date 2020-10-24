@@ -71,6 +71,8 @@
 (defgeneric collide-p (a b)
   (:documentation "Checks if A and B collide."))
 
+(defmethod collide-p (a b))
+
 (defgeneric collide (a b)
   (:documentation "Performs actions when objects collide"))
 
@@ -105,9 +107,10 @@
 
 ;; collision for circle with circle
 (defmethod collide-p ((a collidable2-circle) (b collidable2-circle))
-  (< (+ (collision-radius a)
+  (> (+ (collision-radius a)
 	(collision-radius b))
-     (distance a b)))
+     (distance (coords a)
+	       (coords b))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -124,7 +127,7 @@
 
 (defmethod display ((player player))
   (draw-text "'()" (coords player)
-	     :fill-color *color2*))
+	     :fill-color (color :teal)))
 
 (defmethod update ((player player))
   (move player))
@@ -160,28 +163,93 @@
 (defmethod display ((bot bot))
   (draw-text "@"
 	     (coords bot)
-	     :fill-color *color3*))
+	     :fill-color (color :maroon)))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; BOT SPAWNER IMPLEMENTATION ;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; refactor to generic spawner
-(defclass bot-spawner (counter)
-  ((cooldown :initform (make-instance 'counter :initial 100
-					       :delta 1))
+;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; STARS IMPLEMENTATION ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass star (movable killable)
+  ((coords :initform (vec2 *canvas-width*
+			   (random *canvas-width*))
+	   :initarg :coords)
+   (heading :initform (vec2 -1 0)
+	    :initarg :heading)
+   (speed :initform (+ 1 (random 2)))))
+
+(defmethod update ((star star))
+  (with-slots (coords heading dead) star
+    (unless dead
+      (move star))
+    (when (< (x coords) 0)
+      (setf dead t))))
+
+(defmethod display ((star star))
+  (draw-text "*"
+	     (coords star)
+	     :fill-color (color :grey)))
+
+;;;;;;;;;;;;;;;;;;;;;;;
+;; SPAWNER INTERFACE ;;
+;;;;;;;;;;;;;;;;;;;;;;;
+
+(defgeneric maybe-spawn (spawner)
+  (:documentation "Indeterministically spawns an object."))
+
+(defclass spawner (counter)
+  ((initial :initform 100)
    (remains :initform 5)
    (x-start :initarg :x-start)
    (x-end :initarg :x-end)
    (y-start :initarg :y-start)
    (y-end :initarg :y-end)))
 
-(defmethod maybe-spawn-bot ((spawner bot-spawner))
+(defmethod maybe-spawn :around ((spawner spawner))
   (with-slots (x-start x-end y-start y-end cooldown initial delta) spawner
     (counter-tick spawner)
     (when (counter-elapsed-p spawner)
       (progn
-	(counter-reset spawner (- initial delta))
-	(make-instance 'bot
-		     :coords (vec2 (+ x-start (random (+ 1 (- x-end x-start))))
-				   (+ y-start (random (+ 1 (- y-end y-start))))))))))
+	(counter-reset spawner)
+	(call-next-method)))))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; BOT SPAWNER IMPLEMENTATION ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass bot-spawner (spawner) ())
+
+(defmethod maybe-spawn ((spawner bot-spawner))
+  (with-slots (x-start x-end y-start y-end cooldown initial delta) spawner
+    (make-instance 'bot
+		   :coords (vec2 (+ x-start (random (+ 1 (- x-end x-start))))
+				 (+ y-start (random (+ 1 (- y-end y-start))))))))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; STAR SPAWNER IMPLEMENTATION ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass star-spawner (spawner)
+  ((initial :initform 25)))
+
+(defmethod maybe-spawn ((spawner star-spawner))
+  (with-slots (x-start x-end y-start y-end cooldown initial delta) spawner
+    (make-instance 'star
+		   :coords (vec2 (+ x-start (random (+ 1 (- x-end x-start))))
+				 (+ y-start (random (+ 1 (- y-end y-start))))))))
+
+
+;;;;;;;;;;;;;;;;
+;; COLLISIONS ;;
+;;;;;;;;;;;;;;;;
+
+(defmethod collide ((player player) (bot bot))
+  (print "COLLISION"))
+
+(defmethod collide ((bot bot) (player player))
+  (print "COLLISION"))
+
+(defmethod collide ((bot bot) (bot2 bot))
+  (print "COLLISION"))

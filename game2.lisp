@@ -13,14 +13,6 @@
 
 (defvar *origin* (gamekit:vec2 0 0))
 
-;; color palette
-;; from neutral to the most acid
-(defparameter *color1* (vec4 0.02 0.28 0.30 1))
-(defparameter *color2* (vec4 0 0.68 0.69 1))
-(defparameter *color3* (vec4 0.44 0.120 0.115 1))
-(defparameter *color4* (vec4 0.55 0.2 0.3 1))
-(defparameter *color5* (vec4 0.55 0.1 0.3 1))
-
 (defgame *game* () ()
   (:draw-rate 60)
   (:act-rate 60)
@@ -37,6 +29,12 @@
   (draw-rect *origin*  *canvas-width* *canvas-height* :fill-paint color))
 
 (defparameter *player* (make-instance 'player))
+
+(defparameter *star-spawner* (make-instance 'star-spawner
+					   :x-start *canvas-width*
+					   :x-end *canvas-width*
+					   :y-start 0
+					   :y-end *canvas-height*))
 
 (defparameter *bot-spawner* (make-instance 'bot-spawner
 					   :x-start *canvas-width*
@@ -59,16 +57,27 @@
   )
 
 (defmethod act ((app *game*))
-  (awhen (progn (print "SPAWNING BOT...") (maybe-spawn-bot *bot-spawner*)) 
-    (print "BOT SPAWNED!")
+  (awhen (maybe-spawn *star-spawner*)
+    ;; make it add 3 layers of scene!
     (push it *objects*))
+  (awhen (maybe-spawn *bot-spawner*)
+    ;; make it push to the second layer
+    (push it *objects*))  
+  (handler-case
+      (alexandria:map-combinations (lambda (comb) 
+				     (when (collide-p (car comb) (cadr comb))
+					     (collide (car comb) (cadr comb))))
+				  *objects*
+				  :length 2
+				  :copy nil)
+    (t (arg) (print arg))) 
   (loop for obj in *objects*
 	when (dead-p obj)
 	  do (setf *objects* (delete obj *objects*)) 
 	do (update obj)))
 
 (defmethod draw ((app *game*))
-  (fill-background *color1*)
+  (fill-background (color :black))
   ;; display each object
   (loop for obj in *objects*
 	do (display obj)))
