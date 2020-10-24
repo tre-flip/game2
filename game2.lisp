@@ -8,6 +8,7 @@
 (register-resource-package :assets (asdf:system-relative-pathname :game2 "assets/"))
 (define-font assets::fixed-sys "fixed-sys")
 (defparameter *font* nil)
+(defparameter *font-big* nil)
 
 ;; canvas dimentions
 (defvar *canvas-width* 800)
@@ -43,11 +44,19 @@
 					   :x-end *canvas-width*
 					   :y-start 0
 					   :y-end *canvas-height*))
+
+(defparameter *hp-spawner* (make-instance 'hp-spawner
+					   :x-start *canvas-width*
+					   :x-end *canvas-width*
+					   :y-start 0
+					   :y-end *canvas-height*))
+
 (defparameter *objects* (list *player*)
   "An object pool")
 
 (defmethod post-initialize ((ap *game*))
   (setf *font* (make-font 'assets::fixed-sys 16))
+  (setf *font-big* (make-font 'assets::fixed-sys 30))
   (bind-up    :pressed (lambda () (increase (heading *player*) (vec2 0 1))))
   (bind-left  :pressed (lambda () (increase (heading *player*) (vec2 -1 0))))
   (bind-down  :pressed (lambda () (increase (heading *player*) (vec2 0 -1))))
@@ -66,7 +75,18 @@
 	       :fill-color (color :white)
 	       :font *font*)))
 
+(defun draw-end ()
+  (with-slots (score) *player*
+      (draw-text (format nil "GAME OVER, SCORE: ~a" score)
+		 (vec2 260 (/ *canvas-height* 2.0))
+		 :fill-color (color :white)
+		 :font *font-big*)))
+
+
 (defmethod act ((app *game*))
+
+  (awhen (maybe-spawn *hp-spawner*)
+    (push it *objects*))
   (awhen (maybe-spawn *star-spawner*)
     ;; make it add 3 layers of scene!
     (push it *objects*))
@@ -83,15 +103,21 @@
 				   *objects*
 				   :length 2
 				   :copy nil)
-    (t (arg) (print arg))) 
+    (t (arg) (print arg)))
   (loop for obj in *objects*
+
 	when (dead-p obj)
 	  do (setf *objects* (delete obj *objects*))
-	do (update obj)))
+	do (progn
+	     (update obj)
+	     (awhen (maybe-spawn obj)
+	       (push it *objects*)))))
 
 (defmethod draw ((app *game*))
   (fill-background (color :black))
   ;; display each object
   (loop for obj in *objects*
 	do (display obj))
-  (draw-hud (vec2 10 10)))
+  (draw-hud (vec2 10 10))
+  (when (dead-p *player*)
+    (draw-end)))

@@ -120,7 +120,7 @@
 (defclass player (movable collidable2-circle killable)
   ((coords :initform (vec2 100 100)
 	   :accessor coords)
-   (collision-radius :initform 4)
+   (collision-radius :initform 5)
    (heading :initform (vec2 0 0))
    (speed :initform 5)
    (hp :initform 3
@@ -137,9 +137,10 @@
 	     :font *font*))
 
 (defmethod update ((player player))
-  (with-slots (hp dead) player
+  (with-slots (hp dead weapon) player
     (when (<= hp 0)
-      (setf dead t)))
+      (setf dead t)
+      (setf weapon nil)))
   (move player))
 
 (defmethod move-to ((player player) (where vec2))
@@ -147,11 +148,31 @@
 	where))
 
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; hp bonus implementation ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass hp-box (movable collidable2-circle killable)
+  ((coords :initarg :coords
+	   :accessor coords)
+   (collision-radius :initform 5)
+   (heading :initform (vec2 -1 0))
+   (speed :initform 2)))
+
+(defmethod update ((box hp-box))
+  (move box))
+
+(defmethod display ((box hp-box))
+  (draw-text "<3"
+	     (coords box)
+	     :font *font*
+	     :fill-color (color :pink)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; BOTS IMPLEMENTATION ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defclass bot (movable collidable2-circle killable)
+(defclass bot (movable collidable2-circle killable spawner)
   ((coords :initform (vec2 *canvas-width*
 			   (random *canvas-width*))
 	   :initarg :coords)
@@ -159,8 +180,14 @@
 	    :initarg :heading)
    (speed :initform (+ 1 (random 2)))
    (collision-radius :initform 5)
+   (initial :initform (+ 60 (random 300)))
    (hp :initform (+ 1 (random 2)))))
 
+(defmethod maybe-spawn ((bot bot))
+  (make-instance 'bot-bullet
+		 :heading (vec2 -1 0)
+		 :coords (add (coords bot)
+			      (vec2 -6 0))))
 
 (defmethod update ((bot bot))
   (with-slots (coords heading hp dead) bot
@@ -209,7 +236,7 @@
 ;; BULLET IMPLEMENTATION ;; 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defclass player-bullet (movable killable collidable2-circle)
+(defclass bullet (movable killable collidable2-circle)
   ((coords :initarg :coords
 	   :accessor coords)
    (heading :initarg :heading
@@ -217,18 +244,28 @@
    (collision-radius :initform 5)
    (speed :initform 6)))
 
-(defmethod display ((bullet player-bullet))
+(defmethod display ((bullet bullet))
   (draw-text "->"
 	     (coords bullet)
 	     :fill-color (color :pink)
 	     :font *font*))
 
-(defmethod update ((bullet player-bullet))
+(defmethod update ((bullet bullet))
   (with-slots (coords heading dead) bullet
     (unless dead
       (move bullet))
     (when (> (x coords) *canvas-width*)
       (setf dead t))))
+
+(defclass player-bullet (bullet) ())
+
+(defclass bot-bullet (bullet) ())
+
+(defmethod display ((bullet bot-bullet))
+  (draw-text "<-"
+	     (coords bullet)
+	     :fill-color (color :red)
+	     :font *font*))
 
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;; SPAWNER INTERFACE ;;
@@ -262,7 +299,7 @@
 
 (defmethod maybe-spawn ((spawner bot-spawner))
   (with-slots (x-start x-end y-start y-end cooldown initial delta) spawner
-    (decf initial 0.1)
+    (decf initial 0.5)
     (make-instance 'bot
 		   :coords (vec2 (+ x-start (random (+ 1 (- x-end x-start))))
 				 (+ y-start (random (+ 1 (- y-end y-start))))))))
@@ -274,6 +311,8 @@
 
 (defclass star-spawner (spawner)
   ((initial :initform 25)))
+
+(defmethod maybe-spawn (obj) nil)
 
 (defmethod maybe-spawn ((spawner star-spawner))
   (with-slots (x-start x-end y-start y-end cooldown initial delta) spawner
@@ -296,6 +335,19 @@
 		     :heading (vec2 1 0)
 		     :coords (add (coords *player*)
 				  (vec2 6 0)))))
+
+;;;;;;;;;;;;;;;;
+;; HP SPAWNER ;; 
+;;;;;;;;;;;;;;;;
+
+(defclass hp-spawner (spawner)
+  ((initial :initform 720)))
+
+(defmethod maybe-spawn ((spawner hp-spawner))
+  (with-slots (x-start x-end y-start y-end cooldown initial delta) spawner
+    (make-instance 'hp-box
+		   :coords (vec2 (+ x-start (random (+ 1 (- x-end x-start))))
+				 (+ y-start (random (+ 1 (- y-end y-start))))))))
 
 
 ;;;;;;;;;;;;;;;;
@@ -324,3 +376,30 @@
 
 (defmethod collide ((bullet player-bullet) (player player))
   )
+
+(defmethod collide ((bullet bot-bullet) (player player))
+  (with-slots (hp) player
+    (decf hp))
+  (setf (dead bullet) t))
+
+(defmethod collide ((player player) (bullet bot-bullet))
+  (collide bullet player))
+
+(defmethod collide ((bot-bullet bot-bullet) (player-bullet player-bullet))
+  (setf (dead player-bullet) t
+	(dead bot-bullet) t))
+
+(defmethod collide ((bot-bullet bot-bullet) (bot bot))
+  )
+
+(defmethod collide ((bot bot) (bot-bullet bot-bullet))
+  )
+
+(defmethod collide ((player player) (hp-box hp-box))
+  (with-slots (hp) player
+    (incf hp)
+    (with-slots (dead) hp-box
+      (setf dead t))))
+
+(defmethod collide ((hp-box hp-box) (player player))
+  (collide player hp-box))
