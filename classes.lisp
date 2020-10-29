@@ -168,6 +168,7 @@
 	     :font *font*
 	     :fill-color (color :pink)))
 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; BOTS IMPLEMENTATION ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -299,7 +300,7 @@
 
 (defmethod maybe-spawn ((spawner bot-spawner))
   (with-slots (x-start x-end y-start y-end cooldown initial delta) spawner
-    (decf initial 0.5)
+    (decf initial (/ 1 (+ 1 (score *player*))))
     (make-instance 'bot
 		   :coords (vec2 (+ x-start (random (+ 1 (- x-end x-start))))
 				 (+ y-start (random (+ 1 (- y-end y-start))))))))
